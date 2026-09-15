@@ -1,10 +1,9 @@
-import json
-
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from .. import correlation, models, schemas
+from .. import schemas
 from ..database import get_db
+from ..ingest import ingest_findings
 from ..parsers.nessus import parse_nessus
 from ..parsers.nuclei import parse_nuclei
 from ..parsers.openvas import parse_openvas
@@ -32,38 +31,9 @@ async def import_report(
     content = await file.read()
     records = parser(content)
 
-    batch = models.ImportBatch(source_tool=source_tool, filename=file.filename or "upload")
-    db.add(batch)
-    db.flush()
-
-    alerts_created = 0
-    alerts_updated = 0
-
-    for rec in records:
-        finding = models.Finding(
-            import_batch_id=batch.id,
-            source_tool=rec["source_tool"],
-            host=rec["host"],
-            port=rec.get("port"),
-            protocol=rec.get("protocol"),
-            title=rec["title"],
-            description=rec.get("description"),
-            severity=rec["severity"],
-            cve=rec.get("cve"),
-            cvss_score=rec.get("cvss_score"),
-            signature="",
-            raw_data=json.dumps(rec.get("raw_data"), default=str),
-        )
-        db.add(finding)
-        db.flush()
-
-        _, created = correlation.upsert_alert_for_finding(db, finding)
-        if created:
-            alerts_created += 1
-        else:
-            alerts_updated += 1
-
-    batch.finding_count = len(records)
+    batch, alerts_created, alerts_updated = ingest_findings(
+        db, source_tool, file.filename or "upload", records
+    )
     db.commit()
 
     return schemas.ImportResult(

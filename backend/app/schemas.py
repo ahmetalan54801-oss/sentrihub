@@ -55,6 +55,25 @@ class AlertNoteCreate(BaseModel):
     body: str
 
 
+class ScanCreate(BaseModel):
+    target: str
+
+
+class ScanJobOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    tool: str
+    target: str
+    status: str
+    error: Optional[str] = None
+    findings_ingested: Optional[int] = None
+    alerts_created: Optional[int] = None
+    alerts_updated: Optional[int] = None
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+
+
 class ImportResult(BaseModel):
     import_batch_id: int
     source_tool: str

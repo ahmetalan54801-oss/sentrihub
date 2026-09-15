@@ -65,6 +65,22 @@ class Alert(Base):
     notes = relationship("AlertNote", back_populates="alert", cascade="all, delete-orphan")
 
 
+class ScanJob(Base):
+    __tablename__ = "scan_jobs"
+
+    id = Column(Integer, primary_key=True)
+    tool = Column(String, nullable=False, default="nuclei")
+    target = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="running", index=True)
+    error = Column(Text, nullable=True)
+    import_batch_id = Column(Integer, ForeignKey("import_batches.id"), nullable=True)
+    findings_ingested = Column(Integer, nullable=True)
+    alerts_created = Column(Integer, nullable=True)
+    alerts_updated = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+
 class AlertNote(Base):
     __tablename__ = "alert_notes"
 

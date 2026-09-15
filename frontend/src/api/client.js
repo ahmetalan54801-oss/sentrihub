@@ -31,6 +31,10 @@ export const api = {
     return request(`/api/findings${qs ? `?${qs}` : ""}`);
   },
 
+  startScan: (target) =>
+    request("/api/scans", { method: "POST", body: JSON.stringify({ target }) }),
+  listScans: () => request("/api/scans"),
+
   uploadReport: async (sourceTool, file) => {
     const form = new FormData();
     form.append("file", file);

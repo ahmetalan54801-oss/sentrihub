@@ -3,6 +3,7 @@ import AlertDetail from "./pages/AlertDetail";
 import AlertsQueue from "./pages/AlertsQueue";
 import Dashboard from "./pages/Dashboard";
 import Findings from "./pages/Findings";
+import Scan from "./pages/Scan";
 import Upload from "./pages/Upload";
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
           </NavLink>
           <NavLink to="/alerts">Triage Kuyrugu</NavLink>
           <NavLink to="/findings">Bulgular</NavLink>
+          <NavLink to="/scan">Tarama Baslat</NavLink>
           <NavLink to="/upload">Rapor Yukle</NavLink>
         </nav>
       </aside>
@@ -28,6 +30,7 @@ export default function App() {
           <Route path="/alerts" element={<AlertsQueue />} />
           <Route path="/alerts/:id" element={<AlertDetail />} />
           <Route path="/findings" element={<Findings />} />
+          <Route path="/scan" element={<Scan />} />
           <Route path="/upload" element={<Upload />} />
         </Routes>
       </main>
