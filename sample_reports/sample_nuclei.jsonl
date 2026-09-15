@@ -1,0 +1,3 @@
+{"template-id":"CVE-2021-44228","info":{"name":"Apache Log4j RCE","severity":"critical","description":"Log4Shell JNDI injection","classification":{"cve-id":["CVE-2021-44228"],"cvss-score":10.0}},"host":"http://10.0.0.5:8080","ip":"10.0.0.5","port":"8080","type":"http"}
+{"template-id":"exposed-panels:jenkins-login","info":{"name":"Jenkins Login Panel Exposure","severity":"low","description":"Jenkins login panel is exposed","classification":{}},"host":"http://10.0.0.5:8080","ip":"10.0.0.5","port":"8080","type":"http"}
+{"template-id":"ssl-issuer","info":{"name":"Weak TLS Configuration","severity":"medium","description":"Server supports outdated TLS ciphers","classification":{}},"host":"10.0.0.7","ip":"10.0.0.7","port":"443","type":"ssl"}
