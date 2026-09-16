@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import SessionLocal, get_db
+from ..events import broadcaster
 from ..ingest import ingest_findings
 from ..parsers.nuclei import parse_nuclei
 from ..scanner import InvalidTarget, run_nuclei_scan, validate_target
@@ -35,6 +36,15 @@ def _execute_scan(job_id: int, target: str) -> None:
             job.error = str(exc)
         job.completed_at = datetime.utcnow()
         db.commit()
+
+        broadcaster.publish(
+            {
+                "type": "scan",
+                "target": target,
+                "status": job.status,
+                "findings_ingested": job.findings_ingested,
+            }
+        )
     finally:
         db.close()
 

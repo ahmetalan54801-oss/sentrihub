@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { subscribeLiveEvents } from "../api/liveEvents";
 
 const SEVERITY_ORDER = ["critical", "high", "medium", "low", "info"];
 
@@ -7,8 +8,16 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  function load() {
     api.summary().then(setSummary).catch((e) => setError(e.message));
+  }
+
+  useEffect(() => {
+    load();
+    const unsubscribe = subscribeLiveEvents((event) => {
+      if (event.type !== "connected") load();
+    });
+    return unsubscribe;
   }, []);
 
   if (error) return <p className="error">{error}</p>;

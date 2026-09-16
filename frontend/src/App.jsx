@@ -5,6 +5,7 @@ import AlertDetail from "./pages/AlertDetail";
 import AlertsQueue from "./pages/AlertsQueue";
 import Dashboard from "./pages/Dashboard";
 import Findings from "./pages/Findings";
+import LiveMonitor from "./pages/LiveMonitor";
 import Login from "./pages/Login";
 import Scan from "./pages/Scan";
 import Upload from "./pages/Upload";
@@ -33,6 +34,7 @@ export default function App() {
             Panel
           </NavLink>
           <NavLink to="/alerts">Triage Kuyrugu</NavLink>
+          <NavLink to="/live">Canli Izleme</NavLink>
           <NavLink to="/findings">Bulgular</NavLink>
           <NavLink to="/scan">Tarama Baslat</NavLink>
           <NavLink to="/upload">Rapor Yukle</NavLink>
@@ -46,6 +48,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/alerts" element={<AlertsQueue />} />
           <Route path="/alerts/:id" element={<AlertDetail />} />
+          <Route path="/live" element={<LiveMonitor />} />
           <Route path="/findings" element={<Findings />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/upload" element={<Upload />} />

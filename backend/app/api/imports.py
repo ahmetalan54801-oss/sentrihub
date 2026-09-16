@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas
 from ..database import get_db
+from ..events import broadcaster
 from ..ingest import ingest_findings
 from ..parsers.nessus import parse_nessus
 from ..parsers.nuclei import parse_nuclei
@@ -35,6 +36,15 @@ async def import_report(
         db, source_tool, file.filename or "upload", records
     )
     db.commit()
+
+    broadcaster.publish(
+        {
+            "type": "import",
+            "source": source_tool,
+            "findings_ingested": len(records),
+            "alerts_created": alerts_created,
+        }
+    )
 
     return schemas.ImportResult(
         import_batch_id=batch.id,

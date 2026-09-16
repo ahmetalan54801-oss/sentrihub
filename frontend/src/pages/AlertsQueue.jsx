@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
+import { subscribeLiveEvents } from "../api/liveEvents";
 import SeverityBadge from "../components/SeverityBadge";
 import StatusBadge from "../components/StatusBadge";
 
@@ -19,6 +20,14 @@ export default function AlertsQueue() {
   }
 
   useEffect(load, [status, severity]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeLiveEvents((event) => {
+      if (event.type !== "connected") load();
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, severity]);
 
   return (
     <div>
