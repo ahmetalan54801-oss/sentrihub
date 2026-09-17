@@ -1,7 +1,18 @@
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PlainSerializer
+
+
+def _to_utc_iso(v: datetime) -> str:
+    # DB stores naive UTC datetimes; stamp them explicitly so clients
+    # (JS Date parsing) never mistake them for local time.
+    if v.tzinfo is None:
+        v = v.replace(tzinfo=timezone.utc)
+    return v.isoformat()
+
+
+UTCDatetime = Annotated[datetime, PlainSerializer(_to_utc_iso, return_type=str)]
 
 
 class FindingOut(BaseModel):
@@ -17,8 +28,8 @@ class FindingOut(BaseModel):
     severity: str
     cve: Optional[str] = None
     cvss_score: Optional[float] = None
-    first_seen: datetime
-    last_seen: datetime
+    first_seen: UTCDatetime
+    last_seen: UTCDatetime
 
 
 class AlertNoteOut(BaseModel):
@@ -27,7 +38,7 @@ class AlertNoteOut(BaseModel):
     id: int
     author: Optional[str] = None
     body: str
-    created_at: datetime
+    created_at: UTCDatetime
 
 
 class AlertOut(BaseModel):
@@ -39,8 +50,8 @@ class AlertOut(BaseModel):
     severity: str
     status: str
     assigned_to: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: UTCDatetime
+    updated_at: UTCDatetime
     findings: list[FindingOut] = []
     notes: list[AlertNoteOut] = []
 
@@ -70,8 +81,8 @@ class ScanJobOut(BaseModel):
     findings_ingested: Optional[int] = None
     alerts_created: Optional[int] = None
     alerts_updated: Optional[int] = None
-    created_at: datetime
-    completed_at: Optional[datetime] = None
+    created_at: UTCDatetime
+    completed_at: Optional[UTCDatetime] = None
 
 
 class ImportResult(BaseModel):

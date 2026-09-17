@@ -27,6 +27,82 @@ function findingToLogRow(f) {
   };
 }
 
+function buildTimeBuckets(feed, bucketMinutes = 1, bucketCount = 15) {
+  const bucketMs = bucketMinutes * 60000;
+  const now = Date.now();
+  const start0 = now - (bucketCount - 1) * bucketMs;
+  const buckets = Array.from({ length: bucketCount }, (_, i) => ({
+    start: start0 + i * bucketMs,
+    count: 0,
+  }));
+  for (const e of feed) {
+    if (!e.created_at) continue;
+    const t = new Date(e.created_at).getTime();
+    const idx = Math.floor((t - start0) / bucketMs);
+    if (idx >= 0 && idx < buckets.length) buckets[idx].count += 1;
+  }
+  return buckets;
+}
+
+function TimeSeriesChart({ buckets }) {
+  const width = 720;
+  const height = 140;
+  const padX = 12;
+  const padY = 20;
+  const max = Math.max(1, ...buckets.map((b) => b.count));
+  const stepX = (width - padX * 2) / Math.max(1, buckets.length - 1);
+  const points = buckets.map((b, i) => ({
+    x: padX + i * stepX,
+    y: height - padY - (b.count / max) * (height - padY * 2),
+    count: b.count,
+    start: b.start,
+  }));
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const last = points[points.length - 1];
+  const areaPath = `${linePath} L ${last.x.toFixed(1)} ${height - padY} L ${points[0].x.toFixed(1)} ${height - padY} Z`;
+  // Label the extreme (peak), not always the endpoint - a trailing bucket can
+  // lag "now" by a few seconds and read 0 even when a visible spike sits next to it.
+  const peak = points.reduce((best, p) => (p.count > best.count ? p : best), points[0]);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "auto", display: "block" }}>
+      <line
+        x1={padX}
+        y1={height - padY}
+        x2={width - padX}
+        y2={height - padY}
+        stroke="#2c2c2a"
+        strokeWidth="1"
+      />
+      <path d={areaPath} fill="#3987e5" opacity="0.12" stroke="none" />
+      <path d={linePath} fill="none" stroke="#3987e5" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="9" fill="transparent">
+          <title>
+            {new Date(p.start).toLocaleTimeString()} - {p.count} olay
+          </title>
+        </circle>
+      ))}
+      <circle cx={last.x} cy={last.y} r="4" fill="#3987e5" opacity={last === peak ? 0 : 0.6} />
+      {peak.count > 0 && (
+        <>
+          <circle cx={peak.x} cy={peak.y} r="6" fill="#0b0f14" />
+          <circle cx={peak.x} cy={peak.y} r="4" fill="#3987e5" />
+          <text
+            x={peak.x}
+            y={peak.y - 12}
+            fill="#e6edf3"
+            fontSize="13"
+            textAnchor={peak.x > width - 40 ? "end" : "middle"}
+          >
+            {peak.count}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
+
 function HorizontalBarChart({ rows }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
@@ -89,6 +165,8 @@ export default function LiveMonitor() {
     return () => unsubRef.current?.();
   }, []);
 
+  const timeBuckets = useMemo(() => buildTimeBuckets(feed), [feed]);
+
   const severityRows = useMemo(() => {
     const counts = Object.fromEntries(SEVERITY_ORDER.map((s) => [s, 0]));
     for (const e of feed) {
@@ -133,6 +211,11 @@ export default function LiveMonitor() {
       </p>
 
       {error && <p className="error">{error}</p>}
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 style={{ marginTop: 0 }}>Zaman Icinde Olay Hacmi (son 15 dakika)</h3>
+        <TimeSeriesChart buckets={timeBuckets} />
+      </div>
 
       <div
         style={{
