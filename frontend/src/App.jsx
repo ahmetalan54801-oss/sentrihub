@@ -34,7 +34,7 @@ export default function App() {
             Panel
           </NavLink>
           <NavLink to="/alerts">Triage Kuyrugu</NavLink>
-          <NavLink to="/live">Canli Izleme</NavLink>
+          <NavLink to="/live">Canli Log Akisi</NavLink>
           <NavLink to="/findings">Bulgular</NavLink>
           <NavLink to="/scan">Tarama Baslat</NavLink>
           <NavLink to="/upload">Rapor Yukle</NavLink>

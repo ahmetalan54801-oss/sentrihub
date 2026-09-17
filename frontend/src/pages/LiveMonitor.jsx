@@ -1,21 +1,37 @@
 import { useEffect, useRef, useState } from "react";
+import { api } from "../api/client";
 import { subscribeLiveEvents } from "../api/liveEvents";
 import SeverityBadge from "../components/SeverityBadge";
 
-const CAMERA_SLOTS = ["Giris Kapisi", "Sunucu Odasi", "Otopark", "Koridor"];
+function findingToLogRow(f) {
+  return {
+    id: `finding-${f.id}`,
+    source: f.source_tool,
+    host: f.host,
+    title: f.title,
+    severity: f.severity,
+    created_at: f.last_seen,
+  };
+}
 
 export default function LiveMonitor() {
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState([]);
+  const [error, setError] = useState(null);
   const unsubRef = useRef(null);
 
   useEffect(() => {
+    api
+      .listFindings({ limit: 100 })
+      .then((findings) => setFeed(findings.map(findingToLogRow)))
+      .catch((e) => setError(e.message));
+
     unsubRef.current = subscribeLiveEvents((event) => {
       if (event.type === "connected") {
         setConnected(true);
         return;
       }
-      setFeed((prev) => [{ ...event, id: Date.now() + Math.random() }, ...prev].slice(0, 100));
+      setFeed((prev) => [{ ...event, id: `live-${Date.now()}-${Math.random()}` }, ...prev].slice(0, 200));
     });
     return () => unsubRef.current?.();
   }, []);
@@ -23,52 +39,19 @@ export default function LiveMonitor() {
   return (
     <div>
       <h2>
-        Canli Izleme{" "}
+        Canli Log Akisi{" "}
         <span className="badge" style={{ background: connected ? "#16a34a" : "#6b7280" }}>
           {connected ? "baglandi" : "baglaniyor..."}
         </span>
       </h2>
-
-      <h3>Kamera Goruntuleri</h3>
       <p className="muted">
-        Henuz bagli bir kamera yok. Bir IP kamera (RTSP/ONVIF) veya webcam eklendiginde bu
-        alanlar canli goruntuyle degistirilecek.
+        Gecmis bulgular (veritabanindan) ve harici SIEM/syslog/IDS sistemlerinden{" "}
+        <code>POST /api/events</code> ile gelen canli olaylar tek bir akiste birlesir. Yeni
+        olaylar sayfa yenilenmeden en usttte belirir.
       </p>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
-        {CAMERA_SLOTS.map((name) => (
-          <div
-            key={name}
-            className="card"
-            style={{
-              aspectRatio: "16/9",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            <span style={{ fontSize: 28 }}>📷</span>
-            <span className="muted">{name}</span>
-            <span className="muted" style={{ fontSize: 11 }}>
-              kamera bagli degil
-            </span>
-          </div>
-        ))}
-      </div>
 
-      <h3>Canli Olay Akisi</h3>
-      <p className="muted">
-        Harici SIEM/syslog/IDS sistemleri <code>POST /api/events</code> ile buraya olay
-        gonderdikce, asagidaki liste aninda guncellenir (sayfa yenilemeye gerek yok).
-      </p>
+      {error && <p className="error">{error}</p>}
+
       <table>
         <thead>
           <tr>
@@ -86,13 +69,13 @@ export default function LiveMonitor() {
               <td>{e.host ?? "-"}</td>
               <td>{e.title ?? JSON.stringify(e)}</td>
               <td>{e.severity ? <SeverityBadge severity={e.severity} /> : "-"}</td>
-              <td>{e.created_at ? new Date(e.created_at).toLocaleTimeString() : "-"}</td>
+              <td>{e.created_at ? new Date(e.created_at).toLocaleString() : "-"}</td>
             </tr>
           ))}
           {feed.length === 0 && (
             <tr>
               <td colSpan={5} className="muted">
-                Henuz canli olay gelmedi.
+                Henuz kayit yok.
               </td>
             </tr>
           )}
