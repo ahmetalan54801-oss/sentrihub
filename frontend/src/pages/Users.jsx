@@ -8,6 +8,8 @@ export default function Users() {
   const [role, setRole] = useState("analyst");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [resetId, setResetId] = useState(null);
+  const [resetPassword, setResetPassword] = useState("");
 
   function load() {
     api.listUsers().then(setUsers).catch((e) => setError(e.message));
@@ -41,6 +43,29 @@ export default function Users() {
     }
   }
 
+  async function changeRole(id, newRole) {
+    try {
+      await api.updateUser(id, { role: newRole });
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function submitReset(id) {
+    if (resetPassword.length < 4) {
+      setError("Sifre en az 4 karakter olmali");
+      return;
+    }
+    try {
+      await api.updateUser(id, { password: resetPassword });
+      setResetId(null);
+      setResetPassword("");
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div>
       <h2>Kullanicilar</h2>
@@ -57,6 +82,7 @@ export default function Users() {
           <tr>
             <th>Kullanici Adi</th>
             <th>Rol</th>
+            <th>Sifre</th>
             <th></th>
           </tr>
         </thead>
@@ -64,7 +90,45 @@ export default function Users() {
           {users.map((u) => (
             <tr key={u.id}>
               <td>{u.username}</td>
-              <td>{u.role}</td>
+              <td>
+                <select value={u.role} onChange={(e) => changeRole(u.id, e.target.value)}>
+                  <option value="analyst">analyst</option>
+                  <option value="admin">admin</option>
+                </select>
+              </td>
+              <td>
+                {resetId === u.id ? (
+                  <div className="filters" style={{ gap: 6 }}>
+                    <input
+                      type="password"
+                      placeholder="Yeni sifre"
+                      value={resetPassword}
+                      onChange={(e) => setResetPassword(e.target.value)}
+                      style={{ width: 130 }}
+                    />
+                    <button onClick={() => submitReset(u.id)}>Kaydet</button>
+                    <button
+                      className="secondary"
+                      onClick={() => {
+                        setResetId(null);
+                        setResetPassword("");
+                      }}
+                    >
+                      Vazgec
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="secondary"
+                    onClick={() => {
+                      setResetId(u.id);
+                      setResetPassword("");
+                    }}
+                  >
+                    Sifreyi Degistir
+                  </button>
+                )}
+              </td>
               <td>
                 <button className="secondary" onClick={() => remove(u.id)}>
                   Sil
@@ -74,7 +138,7 @@ export default function Users() {
           ))}
           {users.length === 0 && (
             <tr>
-              <td colSpan={3} className="muted">
+              <td colSpan={4} className="muted">
                 Kullanici yok.
               </td>
             </tr>
