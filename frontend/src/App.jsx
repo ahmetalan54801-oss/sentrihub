@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
-import { clearStoredAuth, getStoredAuth } from "./api/client";
+import { clearStoredAuth, getStoredAuth, getStoredRole } from "./api/client";
 import AlertDetail from "./pages/AlertDetail";
 import AlertsQueue from "./pages/AlertsQueue";
 import Dashboard from "./pages/Dashboard";
@@ -9,9 +9,11 @@ import LiveMonitor from "./pages/LiveMonitor";
 import Login from "./pages/Login";
 import Scan from "./pages/Scan";
 import Upload from "./pages/Upload";
+import Users from "./pages/Users";
 
 export default function App() {
   const [authed, setAuthed] = useState(() => Boolean(getStoredAuth()));
+  const isAdmin = getStoredRole() === "admin";
 
   if (!authed) {
     return <Login onLogin={() => setAuthed(true)} />;
@@ -36,8 +38,9 @@ export default function App() {
           <NavLink to="/alerts">Triage Kuyrugu</NavLink>
           <NavLink to="/live">Canli Log Akisi</NavLink>
           <NavLink to="/findings">Bulgular</NavLink>
-          <NavLink to="/scan">Tarama Baslat</NavLink>
+          {isAdmin && <NavLink to="/scan">Tarama Baslat</NavLink>}
           <NavLink to="/upload">Rapor Yukle</NavLink>
+          {isAdmin && <NavLink to="/users">Kullanicilar</NavLink>}
         </nav>
         <button className="secondary" style={{ marginTop: 20, width: "100%" }} onClick={logout}>
           Cikis Yap
@@ -52,6 +55,7 @@ export default function App() {
           <Route path="/findings" element={<Findings />} />
           <Route path="/scan" element={<Scan />} />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/users" element={<Users />} />
         </Routes>
       </main>
     </div>

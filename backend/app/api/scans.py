@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from ..auth import AuthedUser, require_admin
 from ..database import SessionLocal, get_db
 from ..events import broadcaster
 from ..ingest import ingest_findings
@@ -50,7 +51,11 @@ def _execute_scan(job_id: int, target: str) -> None:
 
 
 @router.post("", response_model=schemas.ScanJobOut)
-def start_scan(payload: schemas.ScanCreate, db: Session = Depends(get_db)):
+def start_scan(
+    payload: schemas.ScanCreate,
+    db: Session = Depends(get_db),
+    admin: AuthedUser = Depends(require_admin),
+):
     try:
         target = validate_target(payload.target)
     except InvalidTarget as exc:

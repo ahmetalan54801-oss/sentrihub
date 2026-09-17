@@ -1,9 +1,22 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+// undefined -> local dev default; "" is a valid override meaning "same-origin, relative /api"
+const API_BASE =
+  import.meta.env.VITE_API_BASE !== undefined
+    ? import.meta.env.VITE_API_BASE
+    : "http://localhost:8000";
 const AUTH_KEY = "sentrihub_auth";
+const ROLE_KEY = "sentrihub_role";
 
 export function getStoredAuth() {
   try {
     return sessionStorage.getItem(AUTH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredRole() {
+  try {
+    return sessionStorage.getItem(ROLE_KEY);
   } catch {
     return null;
   }
@@ -20,6 +33,7 @@ export function setStoredAuth(encoded) {
 export function clearStoredAuth() {
   try {
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
   } catch {
     // ignore
   }
@@ -33,7 +47,13 @@ export async function verifyCredentials(username, password) {
   if (!res.ok) {
     throw new Error("Kullanici adi veya sifre hatali");
   }
+  const data = await res.json();
   setStoredAuth(encoded);
+  try {
+    sessionStorage.setItem(ROLE_KEY, data.role);
+  } catch {
+    // ignore
+  }
   return encoded;
 }
 
@@ -78,6 +98,15 @@ export const api = {
   startScan: (target) =>
     request("/api/scans", { method: "POST", body: JSON.stringify({ target }) }),
   listScans: () => request("/api/scans"),
+
+  simStatus: () => request("/api/simulate/status"),
+  simStart: () => request("/api/simulate/start", { method: "POST" }),
+  simStop: () => request("/api/simulate/stop", { method: "POST" }),
+
+  listUsers: () => request("/api/users"),
+  createUser: (payload) =>
+    request("/api/users", { method: "POST", body: JSON.stringify(payload) }),
+  deleteUser: (id) => request(`/api/users/${id}`, { method: "DELETE" }),
 
   uploadReport: async (sourceTool, file) => {
     const encoded = getStoredAuth();

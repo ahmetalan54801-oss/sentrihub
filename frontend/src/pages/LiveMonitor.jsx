@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api } from "../api/client";
+import { api, getStoredRole } from "../api/client";
 import { subscribeLiveEvents } from "../api/liveEvents";
 import SeverityBadge from "../components/SeverityBadge";
 
@@ -147,7 +147,31 @@ export default function LiveMonitor() {
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState([]);
   const [error, setError] = useState(null);
+  const [simRunning, setSimRunning] = useState(false);
+  const [simBusy, setSimBusy] = useState(false);
+  const isAdmin = getStoredRole() === "admin";
   const unsubRef = useRef(null);
+
+  function refreshSimStatus() {
+    api.simStatus().then((s) => setSimRunning(s.running)).catch(() => {});
+  }
+
+  async function toggleSim() {
+    setSimBusy(true);
+    try {
+      if (simRunning) await api.simStop();
+      else await api.simStart();
+      refreshSimStatus();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSimBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshSimStatus();
+  }, []);
 
   useEffect(() => {
     api
@@ -209,6 +233,17 @@ export default function LiveMonitor() {
         <code>POST /api/events</code> ile gelen canli olaylar tek bir akiste birlesir. Grafikler
         ve tablo yeni olay geldiginde aninda guncellenir.
       </p>
+
+      {isAdmin && (
+        <div className="filters" style={{ alignItems: "center" }}>
+          <span className="badge" style={{ background: simRunning ? "#16a34a" : "#6b7280" }}>
+            {simRunning ? "ag simulasyonu calisiyor" : "ag simulasyonu kapali"}
+          </span>
+          <button className="secondary" onClick={toggleSim} disabled={simBusy}>
+            {simRunning ? "Simulasyonu Durdur" : "Ag Simulasyonunu Baslat"}
+          </button>
+        </div>
+      )}
 
       {error && <p className="error">{error}</p>}
 

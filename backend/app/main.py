@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import models  # noqa: F401  (registers models on Base before create_all)
-from .api import alerts, auth, events, findings, imports, scans, stats
+from .api import alerts, auth, events, findings, imports, scans, simulate, stats, users
 from .auth import require_auth
 from .database import Base, engine
 from .events import broadcaster
@@ -35,6 +35,8 @@ app.include_router(alerts.router, dependencies=protected)
 app.include_router(scans.router, dependencies=protected)
 app.include_router(events.router, dependencies=protected)
 app.include_router(stats.router, dependencies=protected)
+app.include_router(users.router)
+app.include_router(simulate.router)
 
 
 @app.get("/api/health")
