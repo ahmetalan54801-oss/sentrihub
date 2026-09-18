@@ -99,3 +99,42 @@ class SummaryOut(BaseModel):
     open_alerts: int
     severity_breakdown: dict[str, int]
     alert_status_breakdown: dict[str, int]
+
+
+class ShiftOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    start_time: str
+    end_time: str
+    username: Optional[str] = None
+
+
+class ShiftUpdate(BaseModel):
+    username: Optional[str] = None
+
+
+class IncidentReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    alert_id: int
+    title: str
+    summary: str
+    root_cause: Optional[str] = None
+    actions_taken: Optional[str] = None
+    resolution: Optional[str] = None
+    recommendations: Optional[str] = None
+    author: Optional[str] = None
+    created_at: UTCDatetime
+
+
+class IncidentReportCreate(BaseModel):
+    title: str
+    summary: str
+    root_cause: Optional[str] = None
+    actions_taken: Optional[str] = None
+    resolution: Optional[str] = None
+    recommendations: Optional[str] = None
+    author: Optional[str] = None

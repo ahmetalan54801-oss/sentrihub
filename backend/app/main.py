@@ -4,10 +4,23 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import models  # noqa: F401  (registers models on Base before create_all)
-from .api import alerts, auth, events, findings, imports, scans, simulate, stats, users
+from .api import (
+    alerts,
+    auth,
+    events,
+    findings,
+    imports,
+    incidents,
+    scans,
+    shifts,
+    simulate,
+    stats,
+    users,
+)
 from .auth import require_auth
 from .database import Base, engine
 from .events import broadcaster
+from . import sla
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,8 +35,9 @@ app.add_middleware(
 
 
 @app.on_event("startup")
-async def _bind_broadcaster_loop():
+async def _start_background_tasks():
     broadcaster.bind_loop(asyncio.get_running_loop())
+    asyncio.create_task(sla.loop())
 
 
 protected = [Depends(require_auth)]
@@ -35,6 +49,8 @@ app.include_router(alerts.router, dependencies=protected)
 app.include_router(scans.router, dependencies=protected)
 app.include_router(events.router, dependencies=protected)
 app.include_router(stats.router, dependencies=protected)
+app.include_router(shifts.router)
+app.include_router(incidents.router, dependencies=protected)
 app.include_router(users.router)
 app.include_router(simulate.router)
 

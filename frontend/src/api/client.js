@@ -103,9 +103,21 @@ export const api = {
   simStart: () => request("/api/simulate/start", { method: "POST" }),
   simStop: () => request("/api/simulate/stop", { method: "POST" }),
 
+  listShifts: () => request("/api/shifts"),
+  getOncall: () => request("/api/shifts/oncall"),
+  updateShift: (id, payload) =>
+    request(`/api/shifts/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+
+  listIncidents: () => request("/api/incidents"),
+  listIncidentsForAlert: (alertId) => request(`/api/incidents/by-alert/${alertId}`),
+  createIncident: (alertId, payload) =>
+    request(`/api/incidents/${alertId}`, { method: "POST", body: JSON.stringify(payload) }),
+
   listUsers: () => request("/api/users"),
   createUser: (payload) =>
     request("/api/users", { method: "POST", body: JSON.stringify(payload) }),
+  updateUser: (id, payload) =>
+    request(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   deleteUser: (id) => request(`/api/users/${id}`, { method: "DELETE" }),
 
   uploadReport: async (sourceTool, file) => {

@@ -101,3 +101,30 @@ class AlertNote(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     alert = relationship("Alert", back_populates="notes")
+
+
+class Shift(Base):
+    __tablename__ = "shifts"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    start_time = Column(String, nullable=False)  # "HH:MM", UTC
+    end_time = Column(String, nullable=False)  # "HH:MM", UTC
+    username = Column(String, nullable=True)
+
+
+class IncidentReport(Base):
+    __tablename__ = "incident_reports"
+
+    id = Column(Integer, primary_key=True)
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=False)
+    title = Column(String, nullable=False)
+    summary = Column(Text, nullable=False)
+    root_cause = Column(Text, nullable=True)
+    actions_taken = Column(Text, nullable=True)
+    resolution = Column(Text, nullable=True)
+    recommendations = Column(Text, nullable=True)
+    author = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    alert = relationship("Alert")
